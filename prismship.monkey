@@ -9,6 +9,12 @@ Const SCREEN_HEIGHT:Int = 480
 Const PLAYER_WIDTH:Int = 32
 Const PLAYER_HEIGHT:Int = 48
 
+Const BULLET_WIDTH:Int = 4
+Const BULLET_HEIGHT:Int = 22
+
+Const ENEMY_WIDTH:Int = 32
+Const ENEMY_HEIGHT:Int = 32
+
 ' class to handle in game variables
 Class GameVars
 	
@@ -44,11 +50,18 @@ Class Player
 	Field fireKey:Int = KEY_SPACE
 	Field rotateKey:Int = KEY_R
 	
-	Field color:String = "blue"
+	Field topLeft:Vec2D = New Vec2D()
+	Field topRight:Vec2D = New Vec2D()
+	Field botLeft:Vec2D = New Vec2D()
+	Field botRight:Vec2D = New Vec2D()
+	Field box:CollisionRect
+	
+	Field color:String = "BLUE"
 	
 	Method New(x:Float, y:Float)
 		position = New Vec2D(x, y)
 		velocity = New Vec2D()
+		box = New CollisionRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
 	End
 	
 	Method Draw()
@@ -92,8 +105,17 @@ Class Player
 		SetPosition(position.x + velocity.x, position.y + velocity.y)
 	End
 	
+	Method UpdateCornerPoints()
+		topLeft.Set(position.x - PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2)
+		topRight.Set(position.x + PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2)
+		botLeft.Set(position.x - PLAYER_WIDTH/2, position.y + PLAYER_HEIGHT/2)
+		botRight.Set(position.x + PLAYER_WIDTH/2, position.y + PLAYER_HEIGHT/2)
+	End
+	
 	Method SetPosition(x:Float, y:Float)
 		position.Set(x, y)
+		UpdateCornerPoints()
+		box.position.Set(x, y)
 	End
 	
 	Method Fire:Bullet()
@@ -106,16 +128,18 @@ Class Bullet
 	Field velocity:Vec2D
 	Field speed:Float
 	Field type:String
+	Field box:CollisionRect
 	
 	Method New(speed:Float, color:String, x:Float, y:Float)
 		position = New Vec2D(x, y)
 		velocity = New Vec2D(0, speed)
 		type = color
+		box = New CollisionRect(x, y, BULLET_WIDTH, BULLET_HEIGHT)
 	End
 		
 	Method Draw()
 		SetColor(0, 0, 255)
-		DrawRect(position.x, position.y, 4, 22)
+		DrawRect(position.x, position.y, BULLET_WIDTH, BULLET_HEIGHT)
 	End
 	
 	Method Update()
@@ -124,5 +148,61 @@ Class Bullet
 
 	Method SetPosition(x:Float, y:Float)
 		position.Set(x, y)
+		box.position.Set(x, y)
+	End
+End
+
+Class Enemy
+	Field position:Vec2D
+	Field velocity:Vec2D
+	Field speed:Float
+	Field RED:Int = 0
+	Field BLUE:Int = 0
+	Field GREEN:Int = 0
+	Field box:CollisionRect
+	
+	Method New(speed:Float, color:Float, x:Float, y:Float)
+		position = New Vec2D(x, y)
+		velocity = New Vec2D(0, speed)
+		box = New CollisionRect(x, y, ENEMY_WIDTH, ENEMY_HEIGHT)
+		If color < 1.0
+			RED = 255
+		Else If color < 2.0 And color >= 1.0
+			GREEN = 255
+		Else If color < 3.0 And color >= 2.0
+			BLUE = 255
+		Else
+			RED = 128
+			GREEN = 128
+			BLUE = 128
+		End
+		
+	End
+	
+	Method Draw()
+		SetColor(RED, GREEN, BLUE)
+		DrawRect(position.x, position.y, ENEMY_WIDTH, ENEMY_HEIGHT)
+	End
+	
+	Method Update()
+		SetPosition(position.x + velocity.x, position.y + velocity.y)
+	End
+	
+	Method SetPosition(x:Float, y:Float)
+		position.Set(x, y)
+		box.position.Set(x, y)
+	End
+	
+End
+
+Class CollisionRect
+	Field position:Vec2D
+	Field width:Int
+	Field height:Int
+	
+	Method New(x:Float, y:Float, wide:Int, high:Int)
+		position = New Vec2D(x, y)
+		width = wide
+		height = high
 	End
 End

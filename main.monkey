@@ -9,10 +9,14 @@ Class PrismShipGame Extends App
 	Field player:Player = New Player(120, 300)
 	
 	Field bullets:List<Bullet> = New List<Bullet>()
+	Field enemies:List<Enemy>  = New List<Enemy>()
+	
+	Field lastEnemyTime:Float = 0.0
+	Field nextEnemyDiff:Float = 1000
 	
 	Method OnCreate()
 		SetUpdateRate(60)
-		
+		lastEnemyTime = Millisecs()
 	End
 	
 	Method OnUpdate()
@@ -27,6 +31,9 @@ Class PrismShipGame Extends App
 				If KeyHit(KEY_SPACE)
 					bullets.AddLast(player.Fire())
 				End
+				GenerateEnemy()
+				UpdateEnemies(enemies)
+				DestroyThings(bullets, enemies)
 				
 			Case STATE_DEATH
 		End
@@ -46,6 +53,14 @@ Class PrismShipGame Extends App
 						bullets.Remove(bullet)
 					Else
 						bullet.Draw()
+					End
+				End
+				
+				For Local enemy:Enemy = Eachin enemies
+					If enemy.position.y > SCREEN_HEIGHT
+						enemies.Remove(enemy)
+					Else
+						enemy.Draw()
 					End
 				End
 
@@ -75,6 +90,42 @@ Class PrismShipGame Extends App
 	Method UpdateBullets(bullets:List<Bullet>)
 		For Local bullet:Bullet = Eachin bullets
 			bullet.Update()
+		End
+	End
+	
+	Method UpdateEnemies(enemies:List<Enemy>)
+		For Local enemy:Enemy = Eachin enemies
+			enemy.Update()
+		End
+	End
+	
+	Method DestroyThings(bullets:List<Bullet>, enemies:List<Enemy>)
+		For Local bullet:Bullet = Eachin bullets
+			For Local enemy:Enemy = Eachin enemies
+				If Collided(bullet.box, enemy.box)
+					bullets.Remove(bullet)
+					enemies.Remove(enemy)
+				End
+			End
+		End
+	End
+	
+	Method GenerateEnemy()
+		If Millisecs() - lastEnemyTime >= nextEnemyDiff
+			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), Rnd() * SCREEN_WIDTH, -32.0))
+			lastEnemyTime = Millisecs()
+			nextEnemyDiff = 1000 * Rnd(0.5, 2.0)
+		End
+	End
+	
+	Method Collided(box1:CollisionRect, box2:CollisionRect)
+		If (box1.position.x < box2.position.x + box2.width And
+		   box1.position.x + box1.width > box2.position.x And
+		   box1.position.y < box2.position.y + box2.height And
+		   box1.height + box1.position.y > box2.position.y)
+			Return True
+		Else
+			Return False
 		End
 	End
 
