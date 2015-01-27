@@ -15,10 +15,9 @@ Const BULLET_HEIGHT:Int = 22
 Const ENEMY_WIDTH:Int = 32
 Const ENEMY_HEIGHT:Int = 32
 
-' class to handle in game variables
-Class GameVars
-	
-End
+Const USE_KEYBOARD:Int = 0
+Const USE_TOUCH:Int = 1
+
 
 ' class to handle points and velocity in 2d space
 Class Vec2D
@@ -42,13 +41,16 @@ Class Player
 	
 	Field speed:Float = 3.0
 	Field friction:Float = 0.2
+	Field colors:Int[] = [0, 0, 0]
+	Field controls:Int
+	Field lastBullet:Float
+	Field fireRate:Float
 	
 	Field leftKey:Int = KEY_A
 	Field rightKey:Int = KEY_D
 	Field upKey:Int = KEY_W
 	Field downKey:Int = KEY_S
 	Field fireKey:Int = KEY_SPACE
-	Field rotateKey:Int = KEY_R
 	
 	Field topLeft:Vec2D = New Vec2D()
 	Field topRight:Vec2D = New Vec2D()
@@ -56,20 +58,33 @@ Class Player
 	Field botRight:Vec2D = New Vec2D()
 	Field box:CollisionRect
 	
-	Field color:String = "BLUE"
 	
-	Method New(x:Float, y:Float)
+	Method New(x:Float, y:Float, color:Float, controls:Int=0, rate:Float)
 		position = New Vec2D(x, y)
 		velocity = New Vec2D()
 		box = New CollisionRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
+		fireRate = rate
+		lastBullet = Millisecs()
+		
+		If color < 1.0
+			colors[0] = 255
+		Else If color < 2.0 And color >= 1.0
+			colors[1] = 255
+		Else If color < 3.0 And color >= 2.0
+			colors[2] = 255
+		Else
+			colors = [128, 128, 128]
+		End
+		
 	End
 	
 	Method Draw()
-		SetColor(0, 0, 255)
+		SetColor(colors[0], colors[1], colors[2])
 		DrawRect(position.x - PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT)
 	End
 	
 	Method Update()
+		' Use friction for smooth movement
 		If velocity.x > friction
 			velocity.x -= friction
 		Else If velocity.x < -friction
@@ -86,22 +101,26 @@ Class Player
 			velocity.y = 0
 		End
 		
-		If KeyDown(leftKey)
-			velocity.x = -speed
+		If controls = USE_KEYBOARD
+			If KeyDown(leftKey)
+				velocity.x = -speed
+			End
+			
+			If KeyDown(rightKey)
+				velocity.x = speed
+			End
+			
+			If KeyDown(upKey)
+				velocity.y = -speed
+			End
+			
+			If KeyDown(downKey)
+				velocity.y = speed
+			End
+		Else If controls = USE_TOUCH
+			
 		End
-		
-		If KeyDown(rightKey)
-			velocity.x = speed
-		End
-		
-		If KeyDown(upKey)
-			velocity.y = -speed
-		End
-		
-		If KeyDown(downKey)
-			velocity.y = speed
-		End
-		
+				
 		SetPosition(position.x + velocity.x, position.y + velocity.y)
 	End
 	
@@ -119,7 +138,18 @@ Class Player
 	End
 	
 	Method Fire:Bullet()
-		Return New Bullet(-4.0, color, position.x, position.y)
+		Return New Bullet(-7.0, position.x, position.y, colors)
+	End
+	
+	Method ChangeColor()
+		' Rotate through the colors
+		If colors[0] = 255
+			colors = [0, 255, 0]
+		Else If colors[1] = 255
+			colors = [0, 0, 255]
+		Else
+			colors = [255, 0, 0]
+		End
 	End
 End
 
@@ -127,18 +157,21 @@ Class Bullet
 	Field position:Vec2D
 	Field velocity:Vec2D
 	Field speed:Float
-	Field type:String
+	Field colors:Int[] = [0, 0, 0]
+	
 	Field box:CollisionRect
 	
-	Method New(speed:Float, color:String, x:Float, y:Float)
+	Method New(speed:Float, x:Float, y:Float, parent_colors:Int[])
 		position = New Vec2D(x, y)
 		velocity = New Vec2D(0, speed)
-		type = color
+
+		colors = parent_colors
+		
 		box = New CollisionRect(x, y, BULLET_WIDTH, BULLET_HEIGHT)
 	End
 		
 	Method Draw()
-		SetColor(0, 0, 255)
+		SetColor(colors[0], colors[1], colors[2])
 		DrawRect(position.x, position.y, BULLET_WIDTH, BULLET_HEIGHT)
 	End
 	
@@ -156,9 +189,7 @@ Class Enemy
 	Field position:Vec2D
 	Field velocity:Vec2D
 	Field speed:Float
-	Field RED:Int = 0
-	Field BLUE:Int = 0
-	Field GREEN:Int = 0
+	Field colors:Int[] = [0, 0, 0]
 	Field box:CollisionRect
 	
 	Method New(speed:Float, color:Float, x:Float, y:Float)
@@ -166,21 +197,19 @@ Class Enemy
 		velocity = New Vec2D(0, speed)
 		box = New CollisionRect(x, y, ENEMY_WIDTH, ENEMY_HEIGHT)
 		If color < 1.0
-			RED = 255
+			colors[0] = 255
 		Else If color < 2.0 And color >= 1.0
-			GREEN = 255
+			colors[1] = 255
 		Else If color < 3.0 And color >= 2.0
-			BLUE = 255
+			colors[2] = 255
 		Else
-			RED = 128
-			GREEN = 128
-			BLUE = 128
+			colors = [128, 128, 128]
 		End
 		
 	End
 	
 	Method Draw()
-		SetColor(RED, GREEN, BLUE)
+		SetColor(colors[0], colors[1], colors[2])
 		DrawRect(position.x, position.y, ENEMY_WIDTH, ENEMY_HEIGHT)
 	End
 	
