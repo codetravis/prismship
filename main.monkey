@@ -3,10 +3,12 @@ Import prismship
 Const STATE_MENU:Int = 0
 Const STATE_GAME:Int = 1
 Const STATE_DEATH:Int = 2
+Const STATE_HELP:Int = 3
 
 Class PrismShipGame Extends App
 	Field gameState:Int = STATE_MENU
-	Field player:Player = New Player(120, 300, 0, 0, 400)
+	Field player:Player = New Player(220, 480 - PLAYER_HEIGHT, 0, USE_KEYBOARD, 400)
+	Field score:Int = 0
 	
 	Field bullets:List<Bullet> = New List<Bullet>()
 	Field enemies:List<Enemy>  = New List<Enemy>()
@@ -14,23 +16,35 @@ Class PrismShipGame Extends App
 	Field lastEnemyTime:Float = 0.0
 	Field nextEnemyDiff:Float = 1000
 	Field lastColorChange:Float = 0.0
-	Field colorChangeTime:Float = 10000
+	Field colorChangeTime:Float = 7000
+	Field controls:String = ""
 	
 	Method OnCreate()
 		SetUpdateRate(60)
 		lastEnemyTime = Millisecs()
+		Seed = Millisecs()
 	End
 	
 	Method OnUpdate()
 		Select gameState
 			Case STATE_MENU
 				If KeyHit(KEY_ENTER)
+					gameState = STATE_HELP
+					controls = "KEYBOARD"
+				Else If TouchDown(0)
+					gameState = STATE_HELP
+					controls = "TOUCH"
+				End
+			Case STATE_HELP
+				If KeyHit(KEY_ENTER)
+					gameState = STATE_GAME
+				Else If TouchDown(0)
 					gameState = STATE_GAME
 				End
 			Case STATE_GAME
 				UpdatePlayer(player)
 				UpdateBullets(bullets)
-				If KeyHit(KEY_SPACE)
+				If KeyHit(KEY_SPACE) Or (TouchDown(0) And TouchDown(1))
 					' Only create a bullet if the player has not fired recently
 					If Millisecs() - player.lastBullet >= player.fireRate
 						bullets.AddLast(player.Fire())
@@ -44,6 +58,9 @@ Class PrismShipGame Extends App
 				ChangeColor(player)
 				
 			Case STATE_DEATH
+				If KeyHit(KEY_ENTER) Or TouchDown(0)
+					Reset()
+				End
 		End
 	End
 	
@@ -52,7 +69,25 @@ Class PrismShipGame Extends App
 		
 		Select gameState
 			Case STATE_MENU
-				DrawText("PrismShip -- Press ENTER to play!", 320, 200, 0.5)
+				DrawText("PrismShip", 320, 200, 0.5)
+				DrawText("ENTER to use keyboard controls", 320, 250, 0.5)
+				DrawText("Or Touch Screen To use touch controls", 320, 300, 0.5)
+			Case STATE_HELP
+				If controls = "KEYBOARD"
+					DrawText("Keyboard Controls", 320, 100, 0.5)
+					DrawText("-- Use W, A, S, D to Move", 320, 150, 0.5)
+					DrawText("-- Use SPACE key to Fire", 320, 200, 0.5)
+					DrawText("Press ENTER to play!", 320, 250, 0.5)
+					player.controls = USE_KEYBOARD
+				Else If controls = "TOUCH"
+					DrawText("Touch Controls", 320, 100, 0.5)
+					DrawText("-- Touch to one side of the ship to Move in that direction", 320, 150, 0.5)
+					DrawText("-- Touch with 2 fingers to Fire", 320, 200, 0.5)
+					DrawText("-- Touch screen to play!", 320, 250, 0.5)
+					player.controls = USE_TOUCH
+				End
+				DrawText("Shoot Blocks the same color as you to score", 320, 300, 0.5)
+				DrawText("Get hit by a block and you lose", 320, 350, 0.5)
 			Case STATE_GAME
 				PushMatrix()
 				
@@ -72,10 +107,14 @@ Class PrismShipGame Extends App
 					End
 				End
 
-				player.Draw()				
+				player.Draw()
+				SetColor(255, 255, 255)
+				DrawText("Score: " + score, 20, 20, 0, 0)				
 				PopMatrix()
 			Case STATE_DEATH
 				DrawText("GAME OVER", 320, 200, 0.5)
+				DrawText("SCORE: " + score, 320, 250, 0.5)
+				DrawText("Hit ENTER or Touch the screen to try again!", 320, 300, 0.5)
 		End	
 	End
 	
@@ -83,16 +122,16 @@ Class PrismShipGame Extends App
 		player.Update()
 		
 		' update the player position
-		If player.position.x < PLAYER_WIDTH / 2
-			player.SetPosition(PLAYER_WIDTH / 2, player.position.y)
+		If player.position.x < 0
+			player.SetPosition(0, player.position.y)
 		Else If player.position.x > SCREEN_WIDTH - PLAYER_WIDTH
 			player.SetPosition(SCREEN_WIDTH - PLAYER_WIDTH, player.position.y)
 		End
 		
 		If player.position.y > SCREEN_HEIGHT - PLAYER_HEIGHT
 			player.SetPosition(player.position.x, SCREEN_HEIGHT - PLAYER_HEIGHT)
-		Else If player.position.y < PLAYER_HEIGHT / 2
-			player.SetPosition(player.position.x, PLAYER_HEIGHT / 2)
+		Else If player.position.y < 0
+			player.SetPosition(player.position.x, 0)
 		End
 		
 	End
@@ -117,6 +156,7 @@ Class PrismShipGame Extends App
 				If Collided(bullet.box, enemy.box) And SameColor(bullet, enemy)
 					bullets.Remove(bullet)
 					enemies.Remove(enemy)
+					score += 10
 				Else If Collided(bullet.box, enemy.box) And Not SameColor(bullet, enemy)
 					bullets.Remove(bullet)
 				End
@@ -134,8 +174,8 @@ Class PrismShipGame Extends App
 	End
 	
 	Method GenerateEnemy()
-		If Millisecs() - lastEnemyTime >= nextEnemyDiff
-			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), Rnd() * SCREEN_WIDTH, -32.0))
+		If Millisecs() - lastEnemyTime >= Max(nextEnemyDiff - score, 200)
+			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), 20.0 + Rnd() * (SCREEN_WIDTH - 40), -32.0))
 			lastEnemyTime = Millisecs()
 			nextEnemyDiff = 1000 * Rnd(0.5, 1.0)
 		End
@@ -167,6 +207,14 @@ Class PrismShipGame Extends App
 			player.ChangeColor()
 			lastColorChange = Millisecs()
 		End 
+	End
+	
+	Method Reset()
+		player.Reset()
+		enemies.Clear()
+		bullets.Clear()
+		score = 0
+		gameState = STATE_MENU
 	End
 
 End

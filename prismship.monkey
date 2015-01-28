@@ -38,6 +38,7 @@ End
 Class Player
 	Field position:Vec2D
 	Field velocity:Vec2D
+	Field originalPosition:Vec2D
 	
 	Field speed:Float = 3.0
 	Field friction:Float = 0.2
@@ -45,6 +46,7 @@ Class Player
 	Field controls:Int
 	Field lastBullet:Float
 	Field fireRate:Float
+	Field bullet_speed:Float = -8.0
 	
 	Field leftKey:Int = KEY_A
 	Field rightKey:Int = KEY_D
@@ -61,6 +63,7 @@ Class Player
 	
 	Method New(x:Float, y:Float, color:Float, controls:Int=0, rate:Float)
 		position = New Vec2D(x, y)
+		originalPosition = position
 		velocity = New Vec2D()
 		box = New CollisionRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
 		fireRate = rate
@@ -80,7 +83,12 @@ Class Player
 	
 	Method Draw()
 		SetColor(colors[0], colors[1], colors[2])
-		DrawRect(position.x - PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT)
+		DrawRect(position.x, position.y, PLAYER_WIDTH, PLAYER_HEIGHT)
+	End
+	
+	Method Reset()
+		SetPosition(originalPosition.x, originalPosition.y)
+		velocity.Set(0, 0)
 	End
 	
 	Method Update()
@@ -102,33 +110,39 @@ Class Player
 		End
 		
 		If controls = USE_KEYBOARD
-			If KeyDown(leftKey)
+			If KeyDown(leftKey) Or KeyDown(KEY_LEFT)
 				velocity.x = -speed
 			End
 			
-			If KeyDown(rightKey)
+			If KeyDown(rightKey) Or KeyDown(KEY_RIGHT)
 				velocity.x = speed
 			End
 			
-			If KeyDown(upKey)
+			If KeyDown(upKey) Or KeyDown(KEY_UP)
 				velocity.y = -speed
 			End
 			
-			If KeyDown(downKey)
+			If KeyDown(downKey) Or KeyDown(KEY_DOWN)
 				velocity.y = speed
 			End
 		Else If controls = USE_TOUCH
-			
+			If TouchDown(0) And Not TouchDown(1)
+				If TouchX(0) > position.x
+					velocity.x = speed
+				Else If TouchX(0) < position.x
+					velocity.x = -speed
+				End
+			End
 		End
 				
 		SetPosition(position.x + velocity.x, position.y + velocity.y)
 	End
 	
 	Method UpdateCornerPoints()
-		topLeft.Set(position.x - PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2)
-		topRight.Set(position.x + PLAYER_WIDTH/2, position.y - PLAYER_HEIGHT/2)
-		botLeft.Set(position.x - PLAYER_WIDTH/2, position.y + PLAYER_HEIGHT/2)
-		botRight.Set(position.x + PLAYER_WIDTH/2, position.y + PLAYER_HEIGHT/2)
+		topLeft.Set(position.x, position.y)
+		topRight.Set(position.x + PLAYER_WIDTH, position.y)
+		botLeft.Set(position.x, position.y + PLAYER_HEIGHT)
+		botRight.Set(position.x + PLAYER_WIDTH, position.y + PLAYER_HEIGHT)
 	End
 	
 	Method SetPosition(x:Float, y:Float)
@@ -138,7 +152,7 @@ Class Player
 	End
 	
 	Method Fire:Bullet()
-		Return New Bullet(-7.0, position.x, position.y, colors)
+		Return New Bullet(bullet_speed, position.x + PLAYER_WIDTH/2, position.y, colors)
 	End
 	
 	Method ChangeColor()
@@ -188,13 +202,12 @@ End
 Class Enemy
 	Field position:Vec2D
 	Field velocity:Vec2D
-	Field speed:Float
 	Field colors:Int[] = [0, 0, 0]
 	Field box:CollisionRect
 	
-	Method New(speed:Float, color:Float, x:Float, y:Float)
+	Method New(yspeed:Float, color:Float, x:Float, y:Float)
 		position = New Vec2D(x, y)
-		velocity = New Vec2D(0, speed)
+		velocity = New Vec2D(0, yspeed)
 		box = New CollisionRect(x, y, ENEMY_WIDTH, ENEMY_HEIGHT)
 		If color < 1.0
 			colors[0] = 255
