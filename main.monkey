@@ -31,14 +31,18 @@ Class PrismShipGame Extends App
 				If KeyHit(KEY_ENTER)
 					gameState = STATE_HELP
 					controls = "KEYBOARD"
-				Else If TouchDown(0)
+				Else If (TouchDown(0) And 
+					TouchX(0) > 200 And
+					TouchX(0) < 400 And
+					TouchY(0) > 300 And
+					TouchY(0) < 320)
 					gameState = STATE_HELP
 					controls = "TOUCH"
 				End
 			Case STATE_HELP
 				If KeyHit(KEY_ENTER)
 					gameState = STATE_GAME
-				Else If TouchDown(0)
+				Else If (TouchDown(0)) 
 					gameState = STATE_GAME
 				End
 			Case STATE_GAME
@@ -71,7 +75,7 @@ Class PrismShipGame Extends App
 			Case STATE_MENU
 				DrawText("PrismShip", 320, 200, 0.5)
 				DrawText("ENTER to use keyboard controls", 320, 250, 0.5)
-				DrawText("Or Touch Screen To use touch controls", 320, 300, 0.5)
+				DrawText("Or Touch Screen HERE To use touch controls", 320, 300, 0.5)
 			Case STATE_HELP
 				If controls = "KEYBOARD"
 					DrawText("Keyboard Controls", 320, 100, 0.5)
@@ -174,7 +178,7 @@ Class PrismShipGame Extends App
 	End
 	
 	Method GenerateEnemy()
-		If Millisecs() - lastEnemyTime >= Max(nextEnemyDiff - score, 200)
+		If Millisecs() - lastEnemyTime >= Max(nextEnemyDiff - score, 200.0)
 			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), 20.0 + Rnd() * (SCREEN_WIDTH - 40), -32.0))
 			lastEnemyTime = Millisecs()
 			nextEnemyDiff = 1000 * Rnd(0.5, 1.0)
