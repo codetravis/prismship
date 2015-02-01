@@ -28,6 +28,11 @@ Class PrismShipGame Extends App
 	Field greenEnemyImg:Image
 	Field enemyImages:Image[]
 	
+	Field redBulletImg:Image
+	Field greenBulletImg:Image
+	Field blueBulletImg:Image
+	Field bulletImages:Image[]
+	
 	Field player:Player
 	
 	Method OnCreate()
@@ -46,6 +51,12 @@ Class PrismShipGame Extends App
 		bluePlayerImg = LoadImage("PLAYER_BLUE.png")
 		greenPlayerImg = LoadImage("PLAYER_GREEN.png")
 		playerImages = [redPlayerImg, greenPlayerImg, bluePlayerImg]
+		
+		' Load Bullet Images
+		redBulletImg = LoadImage("BULLET_RED.png")
+		blueBulletImg = LoadImage("BULLET_BLUE.png")
+		greenBulletImg = LoadImage("BULLET_GREEN.png")
+		bulletImages = [redBulletImg, greenBulletImg, blueBulletImg]
 		
 		player = New Player(220, 480 - PLAYER_HEIGHT * 2, 0, USE_KEYBOARD, 400, playerImages)
 	End
@@ -78,7 +89,7 @@ Class PrismShipGame Extends App
 				If KeyHit(KEY_SPACE) Or (TouchDown(0) And TouchDown(1))
 					' Only create a bullet if the player has not fired recently
 					If Millisecs() - player.lastBullet >= player.fireRate
-						bullets.AddLast(player.Fire())
+						bullets.AddLast(player.Fire(bulletImages))
 						player.lastBullet = Millisecs
 					End
 				End

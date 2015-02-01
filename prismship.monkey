@@ -10,7 +10,7 @@ Const PLAYER_WIDTH:Int = 24
 Const PLAYER_HEIGHT:Int = 48
 
 Const BULLET_WIDTH:Int = 4
-Const BULLET_HEIGHT:Int = 22
+Const BULLET_HEIGHT:Int = 16
 
 Const ENEMY_WIDTH:Int = 32
 Const ENEMY_HEIGHT:Int = 32
@@ -41,7 +41,7 @@ Class Player
 	Field originalPosition:Vec2D
 	
 	Field speed:Float = 3.0
-	Field friction:Float = 0.2
+	Field friction:Float = 0.3
 	Field colors:Int[] = [0, 0, 0]
 	Field controls:Int
 	Field lastBullet:Float
@@ -159,8 +159,8 @@ Class Player
 		box.position.Set(x, y)
 	End
 	
-	Method Fire:Bullet()
-		Return New Bullet(bullet_speed, position.x + PLAYER_WIDTH/2, position.y, colors)
+	Method Fire:Bullet(bulletImages:Image[])
+		Return New Bullet(bullet_speed, position.x + PLAYER_WIDTH/2, position.y, colors, bulletImages[currentImg])
 	End
 	
 	Method ChangeColor()
@@ -187,21 +187,23 @@ Class Bullet
 	Field velocity:Vec2D
 	Field speed:Float
 	Field colors:Int[] = [0, 0, 0]
+	Field bulletImg:Image
 	
 	Field box:CollisionRect
 	
-	Method New(speed:Float, x:Float, y:Float, parent_colors:Int[])
+	Method New(speed:Float, x:Float, y:Float, parent_colors:Int[], img:Image)
 		position = New Vec2D(x, y)
 		velocity = New Vec2D(0, speed)
 
 		colors = parent_colors
+		bulletImg = img
 		
 		box = New CollisionRect(x, y, BULLET_WIDTH, BULLET_HEIGHT)
 	End
 		
 	Method Draw()
 		SetColor(colors[0], colors[1], colors[2])
-		DrawRect(position.x, position.y, BULLET_WIDTH, BULLET_HEIGHT)
+		DrawImage(bulletImg, position.x, position.y)
 	End
 	
 	Method Update()
