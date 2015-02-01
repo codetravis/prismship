@@ -6,7 +6,7 @@ Const TILE_HEIGHT:Int = 48
 Const SCREEN_WIDTH:Int = 640
 Const SCREEN_HEIGHT:Int = 480
 
-Const PLAYER_WIDTH:Int = 32
+Const PLAYER_WIDTH:Int = 24
 Const PLAYER_HEIGHT:Int = 48
 
 Const BULLET_WIDTH:Int = 4
@@ -48,6 +48,9 @@ Class Player
 	Field fireRate:Float
 	Field bullet_speed:Float = -8.0
 	
+	Field playerImages:Image[]
+	Field currentImg:Int = 0
+	
 	Field leftKey:Int = KEY_A
 	Field rightKey:Int = KEY_D
 	Field upKey:Int = KEY_W
@@ -61,20 +64,25 @@ Class Player
 	Field box:CollisionRect
 	
 	
-	Method New(x:Float, y:Float, color:Float, controls:Int=0, rate:Float)
+	Method New(x:Float, y:Float, color:Float, controls:Int=0, rate:Float, imgArray:Image[], moveSpeed:Float=3.0)
 		position = New Vec2D(x, y)
 		originalPosition = position
 		velocity = New Vec2D()
 		box = New CollisionRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
 		fireRate = rate
 		lastBullet = Millisecs()
+		speed = moveSpeed
+		playerImages = imgArray
 		
 		If color < 1.0
 			colors[0] = 255
+			currentImg = 0
 		Else If color < 2.0 And color >= 1.0
 			colors[1] = 255
+			currentImg = 1
 		Else If color < 3.0 And color >= 2.0
 			colors[2] = 255
+			currentImg = 2
 		Else
 			colors = [128, 128, 128]
 		End
@@ -83,7 +91,7 @@ Class Player
 	
 	Method Draw()
 		SetColor(colors[0], colors[1], colors[2])
-		DrawRect(position.x, position.y, PLAYER_WIDTH, PLAYER_HEIGHT)
+		DrawImage(playerImages[currentImg], position.x, position.y)
 	End
 	
 	Method Reset()
@@ -159,11 +167,18 @@ Class Player
 		' Rotate through the colors
 		If colors[0] = 255
 			colors = [0, 255, 0]
+			currentImg = 1
 		Else If colors[1] = 255
 			colors = [0, 0, 255]
+			currentImg = 2
 		Else
 			colors = [255, 0, 0]
+			currentImg = 0
 		End
+	End
+	
+	Method SetSpeed(newSpeed:Float)
+		speed = newSpeed
 	End
 End
 
@@ -204,17 +219,23 @@ Class Enemy
 	Field velocity:Vec2D
 	Field colors:Int[] = [0, 0, 0]
 	Field box:CollisionRect
+	Field colorImages:Image[]
+	Field currentImg:Int
 	
-	Method New(yspeed:Float, color:Float, x:Float, y:Float)
+	Method New(yspeed:Float, color:Float, x:Float, y:Float, enemyImages:Image[])
 		position = New Vec2D(x, y)
 		velocity = New Vec2D(0, yspeed)
+		colorImages = enemyImages
 		box = New CollisionRect(x, y, ENEMY_WIDTH, ENEMY_HEIGHT)
 		If color < 1.0
 			colors[0] = 255
+			currentImg = 0
 		Else If color < 2.0 And color >= 1.0
 			colors[1] = 255
+			currentImg = 1
 		Else If color < 3.0 And color >= 2.0
 			colors[2] = 255
+			currentImg = 2
 		Else
 			colors = [128, 128, 128]
 		End
@@ -223,7 +244,7 @@ Class Enemy
 	
 	Method Draw()
 		SetColor(colors[0], colors[1], colors[2])
-		DrawRect(position.x, position.y, ENEMY_WIDTH, ENEMY_HEIGHT)
+		DrawImage(colorImages[currentImg], position.x, position.y)
 	End
 	
 	Method Update()

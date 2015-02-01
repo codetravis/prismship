@@ -7,7 +7,6 @@ Const STATE_HELP:Int = 3
 
 Class PrismShipGame Extends App
 	Field gameState:Int = STATE_MENU
-	Field player:Player = New Player(220, 480 - PLAYER_HEIGHT, 0, USE_KEYBOARD, 400)
 	Field score:Int = 0
 	
 	Field bullets:List<Bullet> = New List<Bullet>()
@@ -19,28 +18,56 @@ Class PrismShipGame Extends App
 	Field colorChangeTime:Float = 7000
 	Field controls:String = ""
 	
+	Field redPlayerImg:Image
+	Field bluePlayerImg:Image
+	Field greenPlayerImg:Image
+	Field playerImages:Image[]
+	
+	Field redEnemyImg:Image
+	Field blueEnemyImg:Image
+	Field greenEnemyImg:Image
+	Field enemyImages:Image[]
+	
+	Field player:Player
+	
 	Method OnCreate()
 		SetUpdateRate(60)
 		lastEnemyTime = Millisecs()
 		Seed = Millisecs()
+		
+		' Load Enemy Images
+		redEnemyImg = LoadImage("ENEMY_RED.png")
+		blueEnemyImg = LoadImage("ENEMY_BLUE.png")
+		greenEnemyImg = LoadImage("ENEMY_GREEN.png")
+		enemyImages = [redEnemyImg, greenEnemyImg, blueEnemyImg]
+		
+		' Load Player Images
+		redPlayerImg = LoadImage("PLAYER_RED.png")
+		bluePlayerImg = LoadImage("PLAYER_BLUE.png")
+		greenPlayerImg = LoadImage("PLAYER_GREEN.png")
+		playerImages = [redPlayerImg, greenPlayerImg, bluePlayerImg]
+		
+		player = New Player(220, 480 - PLAYER_HEIGHT * 2, 0, USE_KEYBOARD, 400, playerImages)
 	End
 	
 	Method OnUpdate()
 		Select gameState
 			Case STATE_MENU
 				If KeyHit(KEY_ENTER)
-					gameState = STATE_HELP
+					player.SetSpeed(3.0)
 					controls = "KEYBOARD"
+					gameState = STATE_HELP
 				Else If (TouchDown(0) And 
 					TouchX(0) > 200 And
 					TouchX(0) < 400 And
 					TouchY(0) > 300 And
 					TouchY(0) < 320)
-					gameState = STATE_HELP
+					player.SetSpeed(4.0)
 					controls = "TOUCH"
+					gameState = STATE_HELP
 				End
 			Case STATE_HELP
-				If KeyHit(KEY_ENTER)
+				If controls = "KEYBOARD" And KeyHit(KEY_ENTER)
 					gameState = STATE_GAME
 				Else If (TouchDown(0)) 
 					gameState = STATE_GAME
@@ -91,7 +118,7 @@ Class PrismShipGame Extends App
 					player.controls = USE_TOUCH
 				End
 				DrawText("Shoot Blocks the same color as you to score", 320, 300, 0.5)
-				DrawText("Get hit by a block and you lose", 320, 350, 0.5)
+				DrawText("Get hit by a block and you lose", 320, 320, 0.5)
 			Case STATE_GAME
 				PushMatrix()
 				
@@ -128,13 +155,15 @@ Class PrismShipGame Extends App
 		' update the player position
 		If player.position.x < 0
 			player.SetPosition(0, player.position.y)
-		Else If player.position.x > SCREEN_WIDTH - PLAYER_WIDTH
+		End
+		If player.position.x > SCREEN_WIDTH - PLAYER_WIDTH
 			player.SetPosition(SCREEN_WIDTH - PLAYER_WIDTH, player.position.y)
 		End
 		
 		If player.position.y > SCREEN_HEIGHT - PLAYER_HEIGHT
 			player.SetPosition(player.position.x, SCREEN_HEIGHT - PLAYER_HEIGHT)
-		Else If player.position.y < 0
+		End
+		If player.position.y < 0
 			player.SetPosition(player.position.x, 0)
 		End
 		
@@ -179,7 +208,7 @@ Class PrismShipGame Extends App
 	
 	Method GenerateEnemy()
 		If Millisecs() - lastEnemyTime >= Max(nextEnemyDiff - score, 200.0)
-			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), 20.0 + Rnd() * (SCREEN_WIDTH - 40), -32.0))
+			enemies.AddLast(New Enemy(Rnd(2.0, 5.0), Rnd(3.0), 20.0 + Rnd() * (SCREEN_WIDTH - 40), -32.0, enemyImages))
 			lastEnemyTime = Millisecs()
 			nextEnemyDiff = 1000 * Rnd(0.5, 1.0)
 		End
