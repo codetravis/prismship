@@ -1,11 +1,12 @@
 Import prismship
+Import brl.httprequest
 
 Const STATE_MENU:Int = 0
 Const STATE_GAME:Int = 1
 Const STATE_DEATH:Int = 2
 Const STATE_HELP:Int = 3
 
-Class PrismShipGame Extends App
+Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 	Field gameState:Int = STATE_MENU
 	Field score:Int = 0
 	
@@ -33,9 +34,16 @@ Class PrismShipGame Extends App
 	Field blueBulletImg:Image
 	Field bulletImages:Image[]
 	
+	Field getReq:HttpRequest
+	Field postReq:HttpRequest
+	Field highScoreServer:String = "https://prismship.herokuapp.com/"
+	'Field highScoreServer:String = "http://www.google.com"
+	Field highScores:String
+	
 	Field player:Player
 	
 	Method OnCreate()
+		Print "Creating Game"
 		SetUpdateRate(60)
 		lastEnemyTime = Millisecs()
 		Seed = Millisecs()
@@ -58,7 +66,12 @@ Class PrismShipGame Extends App
 		greenBulletImg = LoadImage("BULLET_GREEN.png")
 		bulletImages = [redBulletImg, greenBulletImg, blueBulletImg]
 		
+		' Create Player
 		player = New Player(220, 480 - PLAYER_HEIGHT * 2, 0, USE_KEYBOARD, 400, playerImages)
+		
+		' Go ahead and get high scores for end of game
+		GetScores()
+		
 	End
 	
 	Method OnUpdate()
@@ -104,6 +117,7 @@ Class PrismShipGame Extends App
 					Reset()
 				End
 		End
+		UpdateAsyncEvents
 	End
 	
 	Method OnRender()
@@ -157,6 +171,7 @@ Class PrismShipGame Extends App
 				DrawText("GAME OVER", 320, 200, 0.5)
 				DrawText("SCORE: " + score, 320, 250, 0.5)
 				DrawText("Hit ENTER or Touch the screen to try again!", 320, 300, 0.5)
+				DrawText("High Scores:" + highScores, 320, 320, 0.5)
 		End	
 	End
 	
@@ -259,6 +274,30 @@ Class PrismShipGame Extends App
 		bullets.Clear()
 		score = 0
 		gameState = STATE_MENU
+	End
+	
+	Method GetScores()
+		getReq = New HttpRequest("GET", highScoreServer, Self)
+		Print "Sending Get Request"
+		getReq.Send
+		Print "Get Request Sent"
+	End
+	
+	Method PostScore(myScore:String)
+		postReq = New HttpRequet("POST", highScoreServer, Self)
+		postReq.Send
+	End
+	
+	Method OnHttpRequestComplete:Void(req:HttpRequest)
+		If req = getReq
+			Print "Get Complete"
+		Else
+			Print "Post Complete"
+		End
+		
+		Print req.Status()
+		Print req.ResponseText()
+		highScores = req.ResponseText()
 	End
 
 End
