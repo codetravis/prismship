@@ -9,6 +9,7 @@ Const STATE_HELP:Int = 3
 Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 	Field gameState:Int = STATE_MENU
 	Field score:Int = 0
+	Field initials:String = ""
 	
 	Field bullets:List<Bullet> = New List<Bullet>()
 	Field enemies:List<Enemy>  = New List<Enemy>()
@@ -37,7 +38,6 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 	Field getReq:HttpRequest
 	Field postReq:HttpRequest
 	Field highScoreServer:String = "https://prismship.herokuapp.com/"
-	'Field highScoreServer:String = "http://www.google.com"
 	Field highScores:String
 	
 	Field player:Player
@@ -69,9 +69,6 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 		' Create Player
 		player = New Player(220, 480 - PLAYER_HEIGHT * 2, 0, USE_KEYBOARD, 400, playerImages)
 		
-		' Go ahead and get high scores for end of game
-		GetScores()
-		
 	End
 	
 	Method OnUpdate()
@@ -91,10 +88,19 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 					gameState = STATE_HELP
 				End
 			Case STATE_HELP
-				If controls = "KEYBOARD" And KeyHit(KEY_ENTER)
+				EnableKeyboard()
+				Local char = GetChar()
+				If (char = CHAR_ENTER)
+					DisableKeyboard()
 					gameState = STATE_GAME
-				Else If (TouchDown(0)) 
-					gameState = STATE_GAME
+				Else If (char = CHAR_BACKSPACE Or char = CHAR_DELETE)
+					If (initials.Length() <= 1)
+						initials = ""
+					Else
+						initials = initials[..-1]
+					End
+				Else If (char > 0 And initials.Length() < 3)
+					initials += String.FromChar(char)
 				End
 			Case STATE_GAME
 				UpdatePlayer(player)
@@ -126,24 +132,24 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 		Select gameState
 			Case STATE_MENU
 				DrawText("PrismShip", 320, 200, 0.5)
-				DrawText("ENTER to use keyboard controls", 320, 250, 0.5)
+				DrawText("Hit ENTER to use keyboard controls", 320, 250, 0.5)
 				DrawText("Or Touch Screen HERE To use touch controls", 320, 300, 0.5)
 			Case STATE_HELP
 				If controls = "KEYBOARD"
 					DrawText("Keyboard Controls", 320, 100, 0.5)
-					DrawText("-- Use W, A, S, D to Move", 320, 150, 0.5)
-					DrawText("-- Use SPACE key to Fire", 320, 200, 0.5)
-					DrawText("Press ENTER to play!", 320, 250, 0.5)
+					DrawText("-- Use W, A, S, D to Move", 320, 130, 0.5)
+					DrawText("-- Use SPACE key to Fire", 320, 160, 0.5)
+					DrawText("Enter your initials: " + initials, 320, 190, 0.5)
 					player.controls = USE_KEYBOARD
 				Else If controls = "TOUCH"
 					DrawText("Touch Controls", 320, 100, 0.5)
-					DrawText("-- Touch to one side of the ship to Move in that direction", 320, 150, 0.5)
-					DrawText("-- Touch with 2 fingers to Fire", 320, 200, 0.5)
-					DrawText("-- Touch screen to play!", 320, 250, 0.5)
+					DrawText("-- Touch to one side of the ship to Move in that direction", 320, 130, 0.5)
+					DrawText("-- Touch with 2 fingers to Fire", 320, 160, 0.5)
+					DrawText("Enter your initials to play: " + initials, 320, 190, 0.5)
 					player.controls = USE_TOUCH
 				End
-				DrawText("Shoot Blocks the same color as you to score", 320, 300, 0.5)
-				DrawText("Get hit by a block and you lose", 320, 320, 0.5)
+				DrawText("Shoot Blocks the same color as you to score", 320, 250, 0.5)
+				DrawText("Get hit by a block and you lose", 320, 280, 0.5)
 			Case STATE_GAME
 				PushMatrix()
 				
@@ -168,11 +174,21 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 				DrawText("Score: " + score, 20, 20, 0, 0)				
 				PopMatrix()
 			Case STATE_DEATH
-				DrawText("GAME OVER", 320, 200, 0.5)
-				DrawText("SCORE: " + score, 320, 250, 0.5)
-				DrawText("Hit ENTER or Touch the screen to try again!", 320, 300, 0.5)
-				DrawText("High Scores:" + highScores, 320, 320, 0.5)
+				DrawText("GAME OVER", 320, 115, 0.5)
+				DrawText("INITIALS: " + initials, 320, 130, 0.5)
+				DrawText("SCORE: " + score, 320, 160, 0.5)
+				DrawText("Hit ENTER or Touch the screen to try again!", 320, 190, 0.5)
+				DrawScores(220)
 		End	
+	End
+	
+	Method DrawScores(beginHeight:Float)
+		Local scoreList:String[] = highScores.Split("~n")
+		Local ypos:Float = beginHeight
+		For Local i:Int = 0 Until scoreList.Length
+			DrawText(scoreList[i], 320, ypos)
+			ypos += 10
+		Next
 	End
 	
 	Method UpdatePlayer(player:Player)
@@ -228,6 +244,7 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 		For Local enemy:Enemy = Eachin enemies
 			If Collided(player.box, enemy.box)
 				gameState = STATE_DEATH
+				PostScore()
 			End
 		End
 	End
@@ -283,9 +300,10 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 		Print "Get Request Sent"
 	End
 	
-	Method PostScore(myScore:String)
-		postReq = New HttpRequet("POST", highScoreServer, Self)
-		postReq.Send
+	Method PostScore()
+		postReq = New HttpRequest("POST", highScoreServer + initials + "/" + score, Self)
+		Print highScoreServer + initials + "/" + score
+		postReq.Send()
 	End
 	
 	Method OnHttpRequestComplete:Void(req:HttpRequest)
@@ -293,10 +311,11 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 			Print "Get Complete"
 		Else
 			Print "Post Complete"
+			GetScores()
 		End
 		
 		Print req.Status()
-		Print req.ResponseText()
+		'Print req.ResponseText()
 		highScores = req.ResponseText()
 	End
 

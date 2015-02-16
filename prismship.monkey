@@ -66,7 +66,7 @@ Class Player
 	
 	Method New(x:Float, y:Float, color:Float, controls:Int=0, rate:Float, imgArray:Image[], moveSpeed:Float=3.0)
 		position = New Vec2D(x, y)
-		originalPosition = position
+		originalPosition = New Vec2D(x, y)
 		velocity = New Vec2D()
 		box = New CollisionRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
 		fireRate = rate
