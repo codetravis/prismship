@@ -40,6 +40,8 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 	Field highScoreServer:String = "https://prismship.herokuapp.com/"
 	Field highScores:String
 	
+	Field keyboard_enabled:Bool
+	
 	Field player:Player
 	
 	Method OnCreate()
@@ -68,6 +70,7 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 		
 		' Create Player
 		player = New Player(220, 480 - PLAYER_HEIGHT * 2, 0, USE_KEYBOARD, 400, playerImages)
+		keyboard_enabled = False
 		
 	End
 	
@@ -88,10 +91,14 @@ Class PrismShipGame Extends App Implements IOnHttpRequestComplete
 					gameState = STATE_HELP
 				End
 			Case STATE_HELP
-				EnableKeyboard()
+				If (Not keyboard_enabled)
+					EnableKeyboard()
+					keyboard_enabled = True
+				End
 				Local char = GetChar()
 				If (char = CHAR_ENTER)
 					DisableKeyboard()
+					keyboard_enabled = False
 					gameState = STATE_GAME
 				Else If (char = CHAR_BACKSPACE Or char = CHAR_DELETE)
 					If (initials.Length() <= 1)

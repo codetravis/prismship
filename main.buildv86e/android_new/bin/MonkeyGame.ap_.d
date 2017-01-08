@@ -1,0 +1,21 @@
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/bin/MonkeyGame.ap_ \
+ : /Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/res/drawable-hdpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/res/drawable-ldpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/res/drawable-mdpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/res/layout/main.xml \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/res/values/strings.xml \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/bin/res/drawable-hdpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/bin/res/drawable-ldpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/bin/res/drawable-mdpi/icon.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/BULLET_BLUE.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/BULLET_GREEN.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/BULLET_RED.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/ENEMY_BLUE.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/ENEMY_GREEN.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/ENEMY_RED.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/mojo_font.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/PLAYER_BLUE.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/PLAYER_GREEN.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/assets/monkey/PLAYER_RED.png \
+/Users/tcooper/projects/monkeygames/prismship/main.buildv86e/android_new/bin/AndroidManifest.xml \
